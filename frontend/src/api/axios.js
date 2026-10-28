@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-let apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+let apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
 // Normalize URL: ensure leading http/https URLs always point to /api cleanly
 if (typeof apiBaseUrl === 'string' && apiBaseUrl.startsWith('http')) {
@@ -8,6 +8,8 @@ if (typeof apiBaseUrl === 'string' && apiBaseUrl.startsWith('http')) {
   if (!apiBaseUrl.endsWith('/api')) {
     apiBaseUrl = `${apiBaseUrl}/api`;
   }
+} else if (!apiBaseUrl) {
+  apiBaseUrl = '/api';
 }
 
 const api = axios.create({
@@ -34,13 +36,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Provide a clearer message if it's a network error (e.g. backend sleeping or unreachable)
     if (error.message === 'Network Error') {
-      return Promise.reject(
-        new Error(
-          'Network Error: Unable to reach the backend server. If using Render free tier, the backend may be waking up from sleep (takes ~45s). Please wait a moment and try again.'
-        )
-      );
+      const isConfigMissing = !import.meta.env.VITE_API_URL && window.location.hostname !== 'localhost';
+      const msg = isConfigMissing
+        ? 'Network Error: VITE_API_URL is missing in your Render Static Site environment variables. Please set VITE_API_URL to your backend URL and rebuild.'
+        : 'Network Error: Unable to reach backend server. If using Render free tier, the backend may be waking up from sleep (takes ~45s), or check if your backend is live.';
+      return Promise.reject(new Error(msg));
     }
     const customMessage =
       error.response?.data?.message ||

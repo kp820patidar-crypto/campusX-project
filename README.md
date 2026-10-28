@@ -5,6 +5,10 @@
 
 ---
 
+
+Project Live Video Link : https://drive.google.com/file/d/1ewMMd-joxiPhc7QrV5tZOMb5vLGNZkKO/view?usp=sharing
+
+
 ## 1. Project Overview & Academic Submission
 
 **CampusX** is a complete, production-ready, full-stack marketplace web application engineered specifically for college students. Inspired by platforms like OLX, CampusX provides a safe, trusted, hyper-local platform where students can buy, sell, discover, and exchange second-hand academic resources, electronics, bicycles, and hostel living essentials within their campus perimeter.

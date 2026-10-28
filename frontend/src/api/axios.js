@@ -15,6 +15,7 @@ if (typeof apiBaseUrl === 'string' && apiBaseUrl.startsWith('http')) {
 const api = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
+  timeout: 60000, // 60s timeout to gracefully allow Render free-tier cold starts
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoMemoryServer = null;
 
@@ -7,6 +6,7 @@ export const connectDB = async () => {
   try {
     const uri = process.env.MONGODB_URI;
 
+    // Production or configured Atlas connection
     if (uri && uri.trim() !== '') {
       console.log(`📡 Connecting to MongoDB at ${uri.includes('mongodb+srv') ? 'MongoDB Atlas cluster' : uri}...`);
       await mongoose.connect(uri);
@@ -14,27 +14,20 @@ export const connectDB = async () => {
       return;
     }
 
-    // Fallback: If no MONGODB_URI is provided, start MongoMemoryServer for instant local zero-config running
-    console.log('ℹ️ No MONGODB_URI provided in environment. Starting embedded MongoDB server...');
+    // If in production and no MONGODB_URI was supplied
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('MONGODB_URI environment variable is required in production. Please set it in your Render Environment Variables.');
+    }
+
+    // Local Development Fallback: Dynamically import mongodb-memory-server so it is not required in production
+    console.log('ℹ️ No MONGODB_URI provided in environment. Starting local embedded MongoDB server...');
+    const { MongoMemoryServer } = await import('mongodb-memory-server');
     mongoMemoryServer = await MongoMemoryServer.create();
     const memUri = mongoMemoryServer.getUri();
     await mongoose.connect(memUri);
     console.log(`✅ Connected to embedded MongoDB at ${memUri}`);
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    // If external URI failed, try embedded fallback so app stays functional
-    if (!mongoMemoryServer) {
-      try {
-        console.log('🔄 Attempting fallback to embedded MongoDB server...');
-        mongoMemoryServer = await MongoMemoryServer.create();
-        const memUri = mongoMemoryServer.getUri();
-        await mongoose.connect(memUri);
-        console.log(`✅ Connected to fallback embedded MongoDB at ${memUri}`);
-        return;
-      } catch (fallbackError) {
-        console.error('❌ Embedded MongoDB fallback also failed:', fallbackError.message);
-      }
-    }
     process.exit(1);
   }
 };
@@ -49,4 +42,3 @@ export const closeDB = async () => {
     console.error('Error closing DB:', err);
   }
 };
-
